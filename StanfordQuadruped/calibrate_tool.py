@@ -9,7 +9,7 @@ import os
 import numpy as np
 from pupper.HardwareInterface import HardwareInterface
 
-ServoCalibrationFilePath = '/sys/bus/nvmem/devices/3-00501/nvmem'
+ServoCalibrationFilePath = '/sys/bus/nvmem/devices/3-00500/nvmem'
 
 class LegPositionScale:
 
