@@ -58,7 +58,7 @@ class Subscriber:
             self.last_data, address = self.sock.recvfrom(3)
         except BlockingIOError:
             raise socket.timeout("no messages in buffer and called with timeout = 0")
-        print(self.last_data)
+        # print(self.last_data)
         self.last_time = monotonic()
         return msgpack.loads(self.last_data, raw=False)
     def get(self):
