@@ -51,7 +51,6 @@ class JoyStick(threading.Thread):
                 if not key:
                     continue
                 values = self.values
-                # print(categorize(event), event.value)
                 if key in ("left_analog_x", "right_analog_x"):
                     value = event.value / 32768.
                 elif key in ("left_analog_y", "right_analog_y"):
@@ -74,8 +73,13 @@ class JoyStick(threading.Thread):
 
     def run(self):
         while True:
-            dev = InputDevice(list_devices()[0])
-            if dev.name == 'Logitech Gamepad F710':
+            found = False
+            for dev_path in list_devices():
+                dev = InputDevice(dev_path)
+                if dev.name == 'Logitech Gamepad F710':
+                    found = True
+                    break
+            if found:
                 self.values = {MAP[k]: 0 for k in MAP}
                 LOGGER.info(f"Joystick {dev.name} connected")
                 try:
@@ -83,6 +87,8 @@ class JoyStick(threading.Thread):
                 except OSError as ex:
                     LOGGER.error(f"Joystick disconnected: {ex}")
                     self.values = None
+                else:
+                    time.sleep(1)
             else:
                 time.sleep(1)
 
@@ -94,7 +100,6 @@ joystick.start()
 LOGGER.info(f"Publishing on UDP port {PUBLISHER_PORT}")
 while True:
     values = joystick.get_input()
-    # print(values)
     if values is not None:
         msg = dict(
             lx=values['left_analog_x'],

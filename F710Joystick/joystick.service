@@ -1,0 +1,11 @@
+[Unit]
+Description=MiniPupper Joystick service
+
+[Service]
+ExecStart=/usr/bin/python3 /home/ubuntu/Robotics/QuadrupedRobot/F710Joystick/joystick.py
+Restart=always
+RestartSec=5
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target
