@@ -2,6 +2,34 @@ import numpy as np
 from pupper.ServoCalibration import MICROS_PER_RAD
 from pupper.HardwareConfig import PS4_COLOR, PS4_DEACTIVATED_COLOR
 from enum import Enum
+from io import BytesIO
+
+CALIBRATION_FILE = "/sys/bus/nvmem/devices/3-00500/nvmem"
+DEFAULT_CALIBRATION_VALUES = np.array([[0]*4, [45]*4, [-45]*4])
+
+# Format of the calibration file:
+# It contains 3 rows of 4 values, separated by spaces
+# Row 1: Hip
+# Row 2: Thight
+# Row 3: Calf
+# The format is compatible with numpy.loadtxt.
+def load_calibration_values(filename):
+
+    try:
+        f = open(filename, 'rb')
+        data = BytesIO(b''.join(f.readlines()[:3]))
+        values = np.loadtxt(data, dtype=int)
+    except Exception as ex:
+        values = DEFAULT_CALIBRATION_VALUES
+        print(f"Getcalibration values failed: {ex}")
+    return values
+
+def save_calibration_values(filename, values):
+    try:
+        np.savetxt(filename, values, fmt='%d')
+    except Exception as ex:
+        print(ex)
+
 
 # TODO: put these somewhere else
 class PWMParams:
@@ -17,20 +45,8 @@ class ServoParams:
         self.micros_per_rad = MICROS_PER_RAD  # Must be calibrated
 
         # The neutral angle of the joint relative to the modeled zero-angle in degrees, for each joint
-        try:
-            with open("/sys/bus/nvmem/devices/3-00500/nvmem", "rb") as nv_f:
-                arr1 = np.array(eval(nv_f.readline()))
-                arr2 = np.array(eval(nv_f.readline()))
-                matrix = np.append(arr1, arr2)
-                arr3 = np.array(eval(nv_f.readline()))
-                matrix = np.append(matrix, arr3)
-                matrix.resize(3,4)
-                print("Get nv calibration params: \n" , matrix)
-        except:
-            print("Error, get nv calibration params failed, use default value. Please calibrate your pupper !")
-            matrix = np.array(
-            [[-9, 9, 12, 15], [35, 35, 60, 35], [-30, -27, -22, -48]]
-            )
+        matrix = load_calibration_values(CALIBRATION_FILE)
+        print("Get nv calibration params: \n" , matrix)
         self.neutral_angle_degrees = matrix
         self.servo_multipliers = np.array(
             [[1, 1, -1, -1], [-1, 1, -1, 1], [-1, 1, -1, 1]]
